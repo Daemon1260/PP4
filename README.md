@@ -58,7 +58,12 @@ In this exercise you will:
 # 1) The exact ssh command you ran
 # 2) A detailed, step-by-step explanation of what happened at each stage
 ```
-
+1) ssh enoermerich@Daemon1260
+2) -Es wurde eine TCP-Verbindung zu Port 22 von Daemon1260 aufgebaut.
+   -Derr SSH-Client und der Server führten eine art Handshake durch (erstellen von Verschlüsselung und Austausch temporärer Schlüssel).
+   -Die Authentifizierung erfolgte per Passwort.
+   -Nach erfolgreicher Anmeldung wurde ein Bash-Shell auf dem Remote-Server geöffnet.
+   mit dem Befehl "exit" wurde die Verbindung korrekt beendet.
 ---
 
 ### Task 2: Ed25519 Key Pair
@@ -81,6 +86,12 @@ In this exercise you will:
    * How the **public key** on the server verifies signatures without revealing the private key.
    * Why Ed25519 is preferred (performance, security).
 
+-Der private Schlüssel bleibt sicher auf deinem lokalen Rechner gespeichert.beim verbinden mit SSH, sendet der Server eine Art zufällige Zeichenkette. Mein SSH-Client signiert diese mit meinem privaten Schlüssel. Diese Signatur ist einmalig und kann nur mit dem 
+ privaten Schlüssel erstellt werden.
+-Der öffentliche Schlüssel liegt auf dem Server in der Datei ~/.ssh/authorized_keys.Wenn der Server deine Signatur bekommt, verwendet er den öffentlichen Schlüssel, um die Echtheit zu prüfen.Dabei wird nicht der private Schlüssel übertragen oder offengelegt.
+ Der Server kann mit dem öffentlichen Schlüssel nur verifizieren, dass die Signatur korrekt ist – aber er kann sie nicht selbst erzeugen.
+-ED25519 gilt als moderner Standard in der asymetrischen Kyografie. Er bietet sehr hohe Sicherheit und benötigt webiger Rechenleistung, sowie kleinere Schlüsselgrößen.
+
 **Provide:**
 
 ```bash
@@ -88,7 +99,9 @@ In this exercise you will:
 # 2) The file paths of the generated keys
 # 3) Your written explanation (3–5 sentences) of the signature process
 ```
-
+1) ssh-keygen -t ed25519 -C rene.noermerich@stud.thga.de
+2) Enter file in which to save the key (/home/enoermerich/.ssh/id_ed25519):
+3) Bei einem Login über SSH sendet der Server eine zufällige Zeichenkette an meinen lokalen Rechner. Mein SSH-Client verwendet den privaten Schlüssel ~/.ssh/id_ed25519, um diese Zeichenkette mit meiner Passphrase zu signieren. Der Server überprüft diese Signatur mithilfe des öffentlichen Schlüssels, der in ~/.ssh/authorized_keys hinterlegt ist. Ist die Signatur gültig, wird der Zugriff gewährt. Ohne das ein Passwort eingegeben werden muss, Dabei bleibt der private Schlüssel stets sicher auf meinem Gerät gespeichert.
 ---
 
 ### Task 3: SSH Config File
@@ -122,13 +135,28 @@ In this exercise you will:
    * The difference between `HostName` and `Host`.
    * How aliases prevent long commands.
 
+-Beim eingeben von ssh Server-PP4, schaut SSH zuerst in der Datei ~/.ssh/config nach, ob es einen passenden Host-Eintrag gibt.
+ Wenn ja, nutzt es die dort definierten Einstellungen wie Benutzername, Hostname, Port oder den Pfad zum privaten Schlüssel.
+ -Host ist eine eigen erstellter Name, HostName ist der tatsächliche Rechnername oder die IP-Adresse zu dem/der sich SSH verbinden soll.
+ -Ohne ~/.ssh/config müsste man alles was dort hinterlegt ist in einen langen code schreiben, dies erspart uns ~/.ssh/config sodass man nur z.B. ssh Server-PP4 reicht.
+
 **Provide:**
 
 ```text
 # 1) The full contents of your ~/.ssh/config
 # 2) A short explanation (3–4 sentences) of how the config simplifies connections
 ```
+1)
+    Host Server-PP4
+      Hostname Daemon1260
+      User enoermerich
+      Identyfile ~/.ssh/id_ed25519
 
+    Host Backup Server-PP4
+      Hostname Daemon1260
+      User enoermerich
+      Identyfile ~/.ssh/id.ed25519_Backup Server-PP4
+2) in der Datei "~/.ssh/config" werden die Verbindungsdetails gespeichert. Durch eingabe der Host (Server-PP4 oder Backup Server-PP4) wird eine Verbindung erstellt.
 ---
 
 ### Task 4: SCP File Transfers
@@ -166,8 +194,20 @@ In this exercise you will:
 # 2) Any flags or options used
 # 3) A brief explanation (2–3 sentences) of scp’s mechanism
 ```
+1)
+  -scp ~/Dokumente/Test.txt enoermerich@Daemon1260 :~/backups/
+  -scp enoermerich@Daemon1260:~/backups/Test.txt ~/Downloads/
+  -scp -r enoermerich@Daemon1260:/var/log enoermerich@Daemon1260:/home/max/log_backup
 
+2)
+  -r: für rekursives Kopieren (also komplette Verzeichnisse mit Unterordnern, keine weiteren Flags notwendig in den obigen Beispielen)
+
+3)
+  scp verwendet das SSH-Protokoll, um Dateien verschlüsselt zwischen Computern zu übertragen. Dabei wird automatisch eine sichere Verbindung aufgebaut – so sind sowohl die Datei als auch Benutzername und Passwort geschützt.
+  Die Authentifizierung läuft genauso ab wie bei einer normalen SSH-Verbindung, was scp einfach und sicher zugleich macht.
+  
 ---
+Zeitlich kam ich nur bis hier hin!
 
 ### Task 5: Login Shell Script & Profile Explanation
 
